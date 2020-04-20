@@ -16,44 +16,53 @@ class Timer:
         # label is timer display
         self.label.pack(side=TOP)
 
-        self.button1 = Button(self.bottom_container)
-        self.button1["text"] = "Start"
-        self.button1.pack(side=BOTTOM, fill=X)
-        self.button1.focus_force()
-        self.button1.bind("<Button-1>", self.button_1_click_1)
-        self.button1.bind("<space>", self.button_1_click_1)  # requires fix
+        self.start_button = Button(self.bottom_container)
+        self.start_button["text"] = "Start"
+        self.start_button.pack(side=BOTTOM, fill=X)
+        self.start_button.focus_force()
+        self.start_button.bind("<Button-1>", self.button_1_click_1)
+        self.start_button.bind("<space>", self.button_1_click_1)  # requires fix
 
-        self.button2 = Button(self.bottom_container)
-        self.button2["text"] = "Reset"
-        self.button2.pack(ipadx=7)
-        self.button2.bind("<Button-1>", self.button_2_click)
+        self.reset_button = Button(self.bottom_container)
+        self.reset_button["text"] = "Reset"
+        self.reset_button.pack(ipadx=7)
+        self.reset_button.bind("<Button-1>", self.button_2_click)
+
+        self.add_button = Button(self.bottom_container)
+        self.add_button["text"] = "+"
+        self.add_button.pack()
+        self.add_button.bind("<Button-1>", self.button_3_click)
 
     def button_1_click_1(self, event):
-        self.button1["text"] = "Start"
-        if self.button1["text"] == "Start":
-            self.button1["text"] = "Pause"
+        self.start_button["text"] = "Start"
+        if self.start_button["text"] == "Start":
+            self.start_button["text"] = "Pause"
             self.label.after(1000, self.refresh_label)
-            self.button1.bind("<Button-1>", self.button_1_click_2)
+            self.start_button.bind("<Button-1>", self.button_1_click_2)
         else:
             pass
 
     def button_1_click_2(self, event):
-        self.button1.configure(text="Resume")
-        self.button1.bind("<Button-1>", self.button_1_click_1)
+        self.start_button.configure(text="Resume")
+        self.start_button.bind("<Button-1>", self.button_1_click_1)
 
     def button_2_click(self, event):
         self.label.configure(text="30:00".format(self.minutes, self.seconds))
         self.minutes = 30
         self.seconds = 0
-        if self.button1["text"] == "Pause":
+        if self.start_button["text"] == "Pause":
             pass
         else:
-            self.button1.configure(text="Start")
+            self.start_button.configure(text="Start")
+
+    def button_3_click(self, event):
+        self.minutes += 1
+        self.label.after(100, self.refresh_label)
 
     def refresh_label(self):
         if self.minutes == 0 and self.seconds == 0:
             self.label.configure(text="Time's up!")
-        elif self.button1["text"] == "Resume":
+        elif self.start_button["text"] == "Resume":
             self.label.configure(text="{0:02}:{1:02}".format(self.minutes, self.seconds))
         else:
             self.seconds -= 1
