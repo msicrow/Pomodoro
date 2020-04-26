@@ -1,77 +1,83 @@
+from datetime import *
 from tkinter import *
+import time
 
 
 class Timer:
     def __init__(self, parent):
+        self.time_start = datetime.now()
+        self.time_end = self.time_start + timedelta(seconds=0) # Pomodoro technique typically 25 minute bursts
+        self.time_delta = timedelta()
+
+        self.active = False
+
+        self.run_count = 0
+
         self.container = Frame(parent)
         self.container.pack()
 
-        self.bottom_container = Frame(parent)  # needed for vertical orientation of widgets
-        self.bottom_container.pack(side=BOTTOM)
+        self.time_display = Label(parent, text="25:00")
+        self.time_display.pack()
 
-        self.minutes = 30
-        self.seconds = 0
-
-        self.label = Label(parent, text="{0:02}:{1:02}".format(self.minutes, self.seconds), font="Arial 30", width=10)
-        # label is timer display
-        self.label.pack(side=TOP)
-
-        self.start_button = Button(self.bottom_container)
+        self.start_button = Button(self.container)
         self.start_button["text"] = "Start"
-        self.start_button.pack(side=BOTTOM, fill=X)
+        self.start_button.pack()
         self.start_button.focus_force()
-        self.start_button.bind("<Button-1>", self.button_1_click_1)
-        self.start_button.bind("<space>", self.button_1_click_1)  # requires fix
+        self.start_button.bind("<Button-1>", self.start_click)
 
-        self.reset_button = Button(self.bottom_container)
+        self.reset_button = Button(self.container)
         self.reset_button["text"] = "Reset"
-        self.reset_button.pack(ipadx=7)
-        self.reset_button.bind("<Button-1>", self.button_2_click)
+        self.reset_button.pack()
+        self.reset_button.bind("<Button-1>", self.reset_click)
 
-        self.add_button = Button(self.bottom_container)
-        self.add_button["text"] = "+"
-        self.add_button.pack()
-        self.add_button.bind("<Button-1>", self.button_3_click)
+    def countdown(self):
+        if self.active:
+            if datetime.now() >= self.time_end:
+                self.break_time()
+                # self.time_display["text"] = "Time's Up. 5 minute break."
+            elif self.start_button["text"] == "Resume":
+                self.time_display.configure(text=self.time_display["text"])
+                self.time_display.after(500, self.countdown)
+            else:
+                time_countdown = self.time_end - datetime.now()
+                time_countdown = time_countdown.seconds
+                minutes, seconds = divmod(time_countdown, 60)
+                self.time_display.configure(text=("%02d:%02d" % (int(minutes), int(seconds))))
+                self.time_display.after(500, self.countdown)
 
-    def button_1_click_1(self, event):
+    def break_time(self):
+        self.time_end = datetime.now() + timedelta(seconds=300)
+        self.time_display.after(500, self.countdown)
+        self.run_count += 1
+        if self.run_count == 1:
+            self.time_end = datetime.now() + timedelta(seconds=1500)
+            self.time_display.after(500, self.countdown)
+            self.run_count = 0
+
+    def start_click(self, event):
+        self.active = True
+        self.time_end = datetime.now() + timedelta(seconds=1500)
+        self.countdown()
+        self.start_button["text"] = "Pause"
+        self.start_button.bind("<Button-1>", self.pause_click)
+
+    def pause_click(self, event):
+        self.start_button["text"] = "Resume"
+        self.start_button.bind("<Button-1>", self.resume_click)
+        self.time_delta = self.time_end - datetime.now()   # difference between time now and start time
+
+    def resume_click(self, event):
+        self.active = True
+        self.start_button["text"] = "Pause"
+        self.start_button.bind("<Button-1>", self.pause_click)
+        self.time_end = datetime.now() + self.time_delta   # adding difference to end time
+
+    def reset_click(self, event):
+        self.active = False
+        self.time_display.configure(text="25:00")
+        self.time_end = datetime.now() + timedelta(seconds=1500)
         self.start_button["text"] = "Start"
-        if self.start_button["text"] == "Start":
-            self.start_button["text"] = "Pause"
-            self.label.after(1000, self.refresh_label)
-            self.start_button.bind("<Button-1>", self.button_1_click_2)
-        else:
-            pass
-
-    def button_1_click_2(self, event):
-        self.start_button.configure(text="Resume")
-        self.start_button.bind("<Button-1>", self.button_1_click_1)
-
-    def button_2_click(self, event):
-        self.label.configure(text="30:00".format(self.minutes, self.seconds))
-        self.minutes = 30
-        self.seconds = 0
-        if self.start_button["text"] == "Pause":
-            pass
-        else:
-            self.start_button.configure(text="Start")
-
-    def button_3_click(self, event):
-        self.minutes += 1
-        self.label.after(100, self.refresh_label)
-
-    def refresh_label(self):
-        if self.minutes == 0 and self.seconds == 0:
-            self.label.configure(text="Time's up!")
-        elif self.start_button["text"] == "Resume":
-            self.label.configure(text="{0:02}:{1:02}".format(self.minutes, self.seconds))
-        else:
-            self.seconds -= 1
-
-            if self.seconds == -1:
-                self.seconds = 59
-                self.minutes -= 1
-            self.label.configure(text="{0:02}:{1:02}".format(self.minutes, self.seconds))
-            self.label.after(1000, self.refresh_label)
+        self.start_button.bind("<Button-1>", self.start_click)
 
 
 if __name__ == "__main__":
