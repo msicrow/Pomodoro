@@ -19,6 +19,9 @@ class Timer:
         self.time_display = Label(parent, text="25:00")
         self.time_display.pack()
 
+        self.time_state = Label(parent, text="Work")
+        self.time_state.pack()
+
         self.start_button = Button(self.container)
         self.start_button["text"] = "Start"
         self.start_button.pack()
@@ -34,7 +37,6 @@ class Timer:
         if self.active:
             if datetime.now() >= self.time_end:
                 self.break_time()
-                # self.time_display["text"] = "Time's Up. 5 minute break."
             elif self.start_button["text"] == "Resume":
                 self.time_display.configure(text=self.time_display["text"])
                 self.time_display.after(500, self.countdown)
@@ -46,13 +48,16 @@ class Timer:
                 self.time_display.after(500, self.countdown)
 
     def break_time(self):
-        self.time_end = datetime.now() + timedelta(seconds=300)
-        self.time_display.after(500, self.countdown)
-        self.run_count += 1
         if self.run_count == 1:
+            self.time_state["text"] = "Work"
             self.time_end = datetime.now() + timedelta(seconds=1500)
             self.time_display.after(500, self.countdown)
             self.run_count = 0
+        else:
+            self.time_state["text"] = "Break"
+            self.time_end = datetime.now() + timedelta(seconds=300)
+            self.run_count += 1
+            self.time_display.after(500, self.countdown)
 
     def start_click(self, event):
         self.active = True
@@ -82,5 +87,6 @@ class Timer:
 
 if __name__ == "__main__":
     root = Tk()
+    root.attributes("-topmost", True)
     timer = Timer(root)
     root.mainloop()
